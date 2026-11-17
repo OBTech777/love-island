@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>A question for you</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;1,9..144,500&family=DM+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#fbeef3;--card:#fff;--ink:#2b1233;--soft:#6e5278;--pink:#e63e8b;--pink-ink:#fff;--apricot:#ffb36b;--line:#ecd3df;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;
+  --bg:#1c0b24;--card:#2b1236;--ink:#fbeef3;--soft:#c7a9d1;--pink:#ff5fa2;--pink-ink:#2b1233;--apricot:#ffb36b;--line:#4a2a58;}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#1c0b24;--card:#2b1236;--ink:#fbeef3;--soft:#c7a9d1;--pink:#ff5fa2;--pink-ink:#2b1233;--apricot:#ffb36b;--line:#4a2a58;}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:'DM Sans',system-ui,sans-serif;display:flex;align-items:center;justify-content:center;overflow:hidden}
+main{width:min(92vw,30rem);text-align:center;padding:1.5rem;position:relative;z-index:2}
+h1{font-family:'Fraunces',Georgia,serif;font-weight:500;font-size:clamp(2.1rem,9vw,3.2rem);line-height:1.08;margin:.4rem 0 .8rem;letter-spacing:-.01em}
+p{color:var(--soft);line-height:1.55;margin:0 0 1.6rem;font-size:1.05rem}
+.big{font-size:4.2rem;line-height:1;margin-bottom:.3rem}
+.row{display:flex;gap:1rem;justify-content:center;align-items:center;min-height:5.5rem;flex-wrap:wrap}
+button{font:inherit;cursor:pointer;border:0;border-radius:999px;padding:.85rem 1.6rem;font-weight:600}
+button:focus-visible{outline:3px solid var(--apricot);outline-offset:3px}
+#yes{background:var(--pink);color:var(--pink-ink);font-size:1.1rem;transition:transform .25s}
+#no{background:transparent;color:var(--soft);border:1.5px solid var(--line);transition:transform .2s}
+.screen{display:none}.screen.on{display:block}
+.opts{display:grid;gap:.7rem;margin-bottom:1.2rem}
+.opt{background:var(--card);color:var(--ink);border:1.5px solid var(--line);text-align:left;border-radius:1rem;padding:.9rem 1.1rem;font-weight:400}
+.opt[aria-pressed="true"]{border-color:var(--pink);box-shadow:0 0 0 2px var(--pink) inset}
+.opt b{display:block;font-weight:600}
+.opt span{color:var(--soft);font-size:.92rem}
+input[type=text]{width:100%;font:inherit;padding:.8rem 1rem;border-radius:1rem;border:1.5px solid var(--line);background:var(--card);color:var(--ink);margin-bottom:1.2rem}
+.note{font-size:.85rem;color:var(--soft);margin-top:1rem}
+canvas{position:fixed;inset:0;pointer-events:none;z-index:1}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<canvas id="fx"></canvas>
+<main>
+  <section class="screen on" id="ask">
+    <div class="big" aria-hidden="true">🌹</div>
+    <h1>Adomaa, will you be my girlfriend?</h1>
+    <p>I’ve been wanting to ask for a while. You make me happy, and I’d love for us to be together.</p>
+    <div class="row" id="btns">
+      <button id="yes">Yes, I will</button>
+      <button id="no">No</button>
+    </div>
+    <div class="note" id="hint" aria-live="polite"></div>
+  </section>
+
+  <section class="screen" id="plan">
+    <div class="big" aria-hidden="true">🎉</div>
+    <h1>You said yes! You’re my girlfriend now.</h1>
+    <p>Now let’s plan our first date as a couple. Pick what sounds good.</p>
+    <div class="opts" id="opts">
+      <button class="opt" aria-pressed="false" data-v="coffee and a long chat"><b>Coffee and a long chat</b><span>Low pressure, lots of talking</span></button>
+      <button class="opt" aria-pressed="false" data-v="dinner"><b>Dinner</b><span>Somewhere nice, my treat</span></button>
+      <button class="opt" aria-pressed="false" data-v="a sunset walk and ice cream"><b>Sunset walk and ice cream</b><span>Easy, outdoors, sweet</span></button>
+    </div>
+    <input type="text" id="when" placeholder="Which day works for you?" aria-label="Which day works for you?">
+    <button id="send" style="background:var(--pink);color:var(--pink-ink);font-size:1.05rem">Send my answer</button>
+    <div class="note">This opens WhatsApp with your reply ready to send.</div>
+  </section>
+
+  <section class="screen" id="done">
+    <div class="big" aria-hidden="true">💌</div>
+    <h1>It’s official.</h1>
+    <p>I can’t wait for our first date. See you soon.</p>
+  </section>
+</main>
+
+<script>
+// Edit these two lines: your WhatsApp number (country code, digits only, e.g. 233201234567) and her name.
+var MY_NUMBER = "233534930308";
+var HER_NAME = "";
+
+var $ = function(id){return document.getElementById(id)};
+if (HER_NAME) document.querySelector("#ask h1").textContent = HER_NAME + ", will you be my girlfriend?";
+
+function show(id){
+  document.querySelectorAll(".screen").forEach(function(s){s.classList.remove("on")});
+  $(id).classList.add("on");
+}
+
+// The "No" button dodges, and Yes grows each time.
+var tries = 0, scale = 1;
+var lines = ["Are you sure?","Think about it…","Really?","The Yes button looks lonely","Okay, that one’s getting hard to catch"];
+function dodge(e){
+  if (e) e.preventDefault();
+  var no = $("no"), yes = $("yes");
+  tries++; scale = Math.min(1 + tries*0.18, 2.2);
+  yes.style.transform = "scale(" + scale + ")";
+  var mx = Math.min(window.innerWidth/2 - 70, 140), my = 90;
+  no.style.transform = "translate(" + ((Math.random()*2-1)*mx) + "px," + ((Math.random()*2-1)*my) + "px)";
+  $("hint").textContent = lines[Math.min(tries-1, lines.length-1)];
+}
+$("no").addEventListener("mouseenter", dodge);
+$("no").addEventListener("touchstart", dodge, {passive:false});
+$("no").addEventListener("click", dodge);
+
+// Confetti
+var cv = $("fx"), cx = cv.getContext("2d"), bits = [], raf;
+function size(){cv.width = innerWidth; cv.height = innerHeight}
+size(); addEventListener("resize", size);
+function burst(){
+  if (matchMedia("(prefers-reduced-motion:reduce)").matches) return;
+  var cols = ["#e63e8b","#ffb36b","#ff8fc0","#ffd9a8","#b86bff"];
+  for (var i=0;i<140;i++) bits.push({x:innerWidth/2,y:innerHeight/2,vx:(Math.random()*2-1)*9,vy:Math.random()*-12-2,r:Math.random()*6+3,c:cols[i%cols.length],a:1});
+  cancelAnimationFrame(raf); tick();
+}
+function tick(){
+  cx.clearRect(0,0,cv.width,cv.height);
+  bits.forEach(function(b){b.x+=b.vx;b.y+=b.vy;b.vy+=.35;b.a-=.008;cx.globalAlpha=Math.max(b.a,0);cx.fillStyle=b.c;cx.fillRect(b.x,b.y,b.r,b.r*1.6)});
+  bits = bits.filter(function(b){return b.a>0 && b.y<innerHeight+20});
+  if (bits.length) raf = requestAnimationFrame(tick); else cx.clearRect(0,0,cv.width,cv.height);
+}
+
+$("yes").addEventListener("click", function(){ show("plan"); burst(); });
+
+var choice = "";
+document.querySelectorAll(".opt").forEach(function(o){
+  o.addEventListener("click", function(){
+    document.querySelectorAll(".opt").forEach(function(x){x.setAttribute("aria-pressed","false")});
+    o.setAttribute("aria-pressed","true"); choice = o.dataset.v;
+  });
+});
+
+$("send").addEventListener("click", function(){
+  var when = $("when").value.trim();
+  var msg = "Yes! 💖 I’ll be your girlfriend." +
+    (choice ? " Let’s do " + choice + " for our first date." : "") +
+    (when ? " " + when + " works for me." : "");
+  var url = "https://wa.me/" + MY_NUMBER + "?text=" + encodeURIComponent(msg);
+  window.open(url, "_blank", "noopener");
+  show("done"); burst();
+});
+</script>
+</body>
+</html>
